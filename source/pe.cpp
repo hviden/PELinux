@@ -9,36 +9,37 @@
 #include <windows.h>
 #elif __linux
 #include <unistd.h>
+#include <dlfcn.h>
 #endif
 
 #include "pe.h"
 #include "log.h"
 #include "common.h"
+#include <string.h>
 
 namespace PELoader
 {
 	HMODULE LoadLib(const char *libName)
 	{
-#ifdef _WIN32
-		return LoadLibraryA(libName);
-#elif __linux
-		if (strcmpi(libName, "msvcrt.dll") == 0)
+#ifdef __linux
+		if (strcasecmp(libName, "msvcrt.dll") == 0)
 		{
-			return dlopen("libc.6.so", RTLD_NOW);
+			return dlopen("libc.so.6", RTLD_NOW);
 		}
+#elif _WIN32
+		return LoadLibraryA(libName);
 #endif
-
 		return nullptr;
 	}
 
-	// haha, re-name it
+	// re-name it
 	FARPROC GetLibFunAddress(HMODULE hModule, LPCSTR lpProcName)
 	{
 		// not support get ordinal yet
-#ifdef _WIN32
+#ifdef __linux
+		return (FARPROC)dlsym(hModule, lpProcName);
+#elif _WIN32
 		return GetProcAddress(hModule, lpProcName);
-#elif __linux
-		return dlsym(hModule, lpProcName);
 #endif
 	}
 
@@ -134,15 +135,17 @@ namespace PELoader
 			}
 			else for (; *thunkRef; thunkRef++, funcRef++)
 			{
+				*funcRef = 0;
 				if (IMAGE_SNAP_BY_ORDINAL(*thunkRef))
 				{
-					*funcRef = GetProcAddress(hLib, (LPCSTR)IMAGE_ORDINAL(*thunkRef));
+					//*funcRef = GetProcAddress(hLib, (LPCSTR)IMAGE_ORDINAL(*thunkRef));
+					// not support yet
 				}
 				else
 				{
 					PIMAGE_IMPORT_BY_NAME thunkData = (PIMAGE_IMPORT_BY_NAME)(codeBase + (*thunkRef));
 
-					*funcRef = GetProcAddress(hLib, (LPCSTR)&thunkData->Name);
+					*funcRef = GetLibFunAddress(hLib, (LPCSTR)&thunkData->Name);
 					if (*funcRef == 0)
 					{
 						LogErr("Can't get function [%s]:[%s]", szLibName, (LPCSTR)&thunkData->Name);

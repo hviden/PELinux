@@ -1,22 +1,22 @@
 #pragma once
 
+#define __stdcall __attribute__((stdcall))
 #define WINAPI __stdcall
 typedef int(WINAPI*FARPROC)();
 typedef void* HMODULE;
 
-typedef unsigned long       DWORD;
+typedef unsigned int       DWORD;
 typedef int                 BOOL;
 typedef unsigned char       BYTE;
 typedef unsigned short      WORD;
-typedef long LONG;
-typedef unsigned long ULONG;
-typedef __int64 LONGLONG;
-typedef unsigned __int64 ULONGLONG;
+typedef int LONG;
+typedef unsigned int ULONG;
+typedef long long LONGLONG;
+typedef unsigned long long ULONGLONG;
 #define VOID void
 typedef char CHAR;
 typedef const CHAR *LPCSTR, *PCSTR;
 typedef short SHORT;
-typedef long LONG;
 typedef void *PVOID;
 typedef void *LPVOID;
 #define NTAPI __stdcall
@@ -35,6 +35,7 @@ typedef void *LPVOID;
 #define IMAGE_VXD_SIGNATURE                 0x454C      // LE
 #define IMAGE_NT_SIGNATURE                  0x00004550  // PE00
 
+#pragma pack(1)
 typedef struct _IMAGE_DOS_HEADER {
 	WORD   e_magic;
 	WORD   e_cblp;
@@ -223,6 +224,7 @@ typedef struct _IMAGE_SECTION_HEADER {
 #define IMAGE_REL_BASED_HIGH                  1
 #define IMAGE_REL_BASED_LOW                   2
 #define IMAGE_REL_BASED_HIGHLOW               3
+#define IMAGE_REL_BASED_DIR64			10
 
 #define IMAGE_FILE_RELOCS_STRIPPED           0x0001  // Relocation info stripped from file.
 
@@ -339,4 +341,4 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
 	DWORD   AddressOfNameOrdinals;
 } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
 
-
+#pragma pop

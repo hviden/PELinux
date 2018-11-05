@@ -5,6 +5,7 @@
 #include <windows.h>
 #elif __linux
 #include <unistd.h>
+#include <sys/mman.h>
 #endif
 
 
@@ -227,6 +228,71 @@ namespace Common
 	void mSleep(int miliSecond)
 	{
 		usleep(miliSecond * 1000);
+	}
+
+	int GetProtect(EMemProtect protect)
+	{
+		int iProtect = 0;
+		switch (protect)
+		{
+		case Common::MemProtect_Read:
+			iProtect = PROT_READ;
+			break;
+
+		case Common::MemProtect_ReadWrite:
+			iProtect = PROT_READ | PROT_WRITE;
+			break;
+
+		case Common::MemProtect_ReadWriteExec:
+			iProtect = PROT_READ | PROT_WRITE | PROT_EXEC;
+			break;
+
+		case Common::MemProtect_Exec:
+			iProtect = PROT_EXEC;
+			break;
+
+		default:
+			__debugbreak();
+			break;
+		}
+
+		return iProtect;
+	}
+
+	void * MemAlloc(void *pBase
+	, int sztMem, EMemProtect protect)
+	{
+		void* ret = nullptr;
+		ret = mmap(pBase, sztMem, GetProtect(protect), MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+		if (ret == (void *) -1)
+		{
+			int err = errno;
+			ret = 0;
+		}
+		return ret;
+	}
+
+	bool MemGetProtect(void *pMem, EMemProtect &protect)
+	{
+		bool ret = false;
+
+		return ret;
+	}
+
+	bool MemSetProtect(void *pMem, int sztMem, EMemProtect protect)
+	{
+		bool ret = false;
+		if (mprotect(pMem, sztMem, GetProtect(protect)) == 0)
+		{
+			ret = true;
+		}
+
+		return ret;
+	}
+
+	void MemFree(void *pMem)
+	{
+		munmap(pMem, 0);
 	}
 
 #endif
